@@ -1,0 +1,9 @@
+[[cli]]
+package-ecosystem = "cargo"
+[[cli.ignore]]
+dependency-name = "kittycad-modeling-cmds"
+
+[["kittycad.rs"]]
+package-ecosystem = "cargo"
+[["kittycad.rs".ignore]]
+dependency-name = "kittycad-modeling-cmds"
