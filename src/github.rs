@@ -1,6 +1,5 @@
-use http_body_util::BodyExt;
-use octocrab::models::{Repository};
-use octocrab::{FromResponse, Octocrab};
+use octocrab::Octocrab;
+use octocrab::models::Repository;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 

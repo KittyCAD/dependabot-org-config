@@ -212,14 +212,10 @@ async fn main() -> anyhow::Result<()> {
                 // Remove last filename
                 let path = "/".to_string() + &path[..path.len() - 1].join("/");
 
-                if updates
-                    .iter()
-                    .find(|update| {
-                        update.directory.as_ref() == Some(&path)
-                            && update.package_ecosystem == ecosystem.to_string()
-                    })
-                    .is_some()
-                {
+                if updates.iter().any(|update| {
+                    update.directory.as_ref() == Some(&path)
+                        && update.package_ecosystem == ecosystem.to_string()
+                }) {
                     log::warn!(
                         "Tried to generate an update config that would conflict with existing one for repo {} and ecosystem {}. Skipping...",
                         repo.name,
@@ -328,9 +324,10 @@ async fn create_pr(
         .await
         .context("failed to fetch ref to main branch")?;
 
-    let existing_config = if let Err(_) = octocrab_repo
+    let existing_config = if octocrab_repo
         .get_ref(&Reference::Branch("ciso/update-dependabot".to_string()))
         .await
+        .is_err()
     {
         // Create branch
         if !dry {
