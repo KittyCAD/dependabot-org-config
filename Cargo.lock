@@ -349,13 +349,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "argh",
- "async-trait",
- "bytes",
- "chrono",
  "env_logger",
- "http",
- "http-body",
- "http-body-util",
  "indexmap",
  "indicatif",
  "log",
