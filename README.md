@@ -23,6 +23,20 @@ cargo run -- <ORG_NAME> [--ecosystems-cache <PATH>] [--dependabot-overrides <PAT
 - `--repo`: Limit to specific repositories (repeatable)
 - `--verbose`: Print verbose output
 
+
+### Example
+
+```
+export GH_TOKEN=XXXX RUST_LOG=info 
+cargo run -- KittyCAD --ecosystems-cache .ecosystems-cache.json --dependabot-overrides crates/dependabot/dependabot-overrides.toml --repo "$REPO"
+rm .ecosystems-cache.json
+```
+
+Optionally append:
+
+- `--create-pr` to create a PR
+- `--force-new` to create a dependabot config if none exists
+
 ## Setup
 
 1. Install Rust: https://rustup.rs/
