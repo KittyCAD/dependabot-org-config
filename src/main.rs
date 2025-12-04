@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
     let default_schedule = Schedule {
         interval: "weekly".to_string(),
         day: Some("saturday".to_string()),
-        time: Some("03:00".to_string()),
+        time: None, // Some("03:00".to_string()),
         timezone: Some("America/Los_Angeles".to_string()),
         ..Schedule::default()
     };
