@@ -233,6 +233,11 @@ async fn main() -> anyhow::Result<()> {
                     Ecosystem::Submodule => None,
                     _ => Some(Cooldown {
                         default_days: Some(7),
+                        exclude: Some(vec![
+                            "*kcl*".to_string(),
+                            "*zoo*".to_string(),
+                            "*kittycad*".to_string(),
+                        ]),
                         ..Cooldown::default()
                     }),
                 };
