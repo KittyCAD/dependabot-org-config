@@ -62,7 +62,7 @@ async fn main() -> anyhow::Result<()> {
     let ecosystems = if let Some(ecosystem_cache) = &args.ecosystems_cache {
         if fs::exists(ecosystem_cache)? {
             let file = File::open(ecosystem_cache).context("failed to open file")?;
-            serde_json::from_reader(&file).context("failed to write JSON to file")?
+            serde_json::from_reader(&file).context("failed to read JSON file")?
         } else {
             let ecosystems = find_ecosystems(&octocrab).await?;
             let file = File::create(ecosystem_cache).context("failed to create file")?;
@@ -230,9 +230,9 @@ async fn main() -> anyhow::Result<()> {
                     _ => Some(Cooldown {
                         default_days: Some(7),
                         exclude: Some(vec![
-                            "*kcl*".to_string(),
-                            "*zoo*".to_string(),
-                            "*kittycad*".to_string(),
+                            "\"*kcl*\"".to_string(),
+                            "\"*zoo*\"".to_string(),
+                            "\"*kittycad*\"".to_string(),
                         ]),
                         ..Cooldown::default()
                     }),
