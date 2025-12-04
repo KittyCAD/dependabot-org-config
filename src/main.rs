@@ -524,7 +524,7 @@ async fn search_ecosystems(
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 enum Ecosystem {
     Cargo,
-    NPM,
+    Npm,
     Go,
     Submodule,
     Terraform,
@@ -538,7 +538,7 @@ impl Display for Ecosystem {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Ecosystem::Cargo => write!(f, "cargo")?,
-            Ecosystem::NPM => write!(f, "npm")?,
+            Ecosystem::Npm => write!(f, "npm")?,
             Ecosystem::Go => write!(f, "gomod")?,
             Ecosystem::Submodule => write!(f, "gitsubmodule")?,
             Ecosystem::Terraform => write!(f, "terraform")?,
@@ -577,7 +577,7 @@ async fn find_ecosystems(
 
     let ecosystems: HashMap<String, Vec<(String, Ecosystem)>> = [
         (cargo_roots, Ecosystem::Cargo),
-        (npm_roots, Ecosystem::NPM),
+        (npm_roots, Ecosystem::Npm),
         (go_roots, Ecosystem::Go),
         (submodule_roots, Ecosystem::Submodule),
         (terraform_roots, Ecosystem::Terraform),
