@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct DependabotConfig {
     /// The configuration version (always 2)
@@ -81,7 +81,7 @@ pub struct UpdateOverride {
     pub cooldown: Option<Cooldown>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct Update {
     /// Defines the package ecosystem (e.g. "npm", "docker", etc.)
@@ -245,7 +245,7 @@ pub struct DependencyRule {
     pub update_types: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Registry {
     /// The registry type (e.g. "docker-registry", "npm-registry", etc.).
