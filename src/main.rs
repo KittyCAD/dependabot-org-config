@@ -150,6 +150,16 @@ async fn main() -> anyhow::Result<()> {
         ),
     ]);
 
+    let default_cooldown = Cooldown {
+        default_days: Some(7),
+        exclude: Some(vec![
+            "*kcl*".to_string(),
+            "*zoo*".to_string(),
+            "*kittycad*".to_string(),
+        ]),
+        ..Cooldown::default()
+    };
+
     for repo in repos.iter().progress() {
         // Filter out archived repos
         // Filter out repos that are not enabled via CLI
@@ -191,6 +201,7 @@ async fn main() -> anyhow::Result<()> {
                 schedule: default_schedule.clone(),
                 open_pull_requests_limit,
                 groups: Some(default_groups.clone()),
+                cooldown: Some(default_cooldown.clone()),
                 ..Update::default()
             };
             vec![apply_override(
@@ -227,15 +238,7 @@ async fn main() -> anyhow::Result<()> {
 
                 let cooldown = match ecosystem {
                     Ecosystem::Submodule => None,
-                    _ => Some(Cooldown {
-                        default_days: Some(7),
-                        exclude: Some(vec![
-                            "*kcl*".to_string(),
-                            "*zoo*".to_string(),
-                            "*kittycad*".to_string(),
-                        ]),
-                        ..Cooldown::default()
-                    }),
+                    _ => Some(default_cooldown.clone()),
                 };
 
                 let update = Update {
