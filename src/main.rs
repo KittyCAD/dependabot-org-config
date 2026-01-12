@@ -1,6 +1,7 @@
 mod dependabot;
 mod github;
 
+use crate::dependabot::Registry;
 use anyhow::Context;
 use argh::FromArgs;
 use dependabot::{Cooldown, DependabotConfig, Group, Schedule, Update, UpdateOverride};
@@ -10,6 +11,7 @@ use indicatif::ProgressIterator;
 use octocrab::Octocrab;
 use octocrab::models::repos::{Content, Object};
 use octocrab::models::{Code, Repository};
+use octocrab::params::State;
 use octocrab::params::repos::Reference;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -45,6 +47,15 @@ struct Args {
 
     #[argh(switch, description = "whether to print verbose output")]
     verbose: bool,
+
+    #[argh(switch, description = "only process repos with existing PRs")]
+    only_existing: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct DependabotOverrides {
+    registries: HashMap<String, Registry>,
+    updates: HashMap<String, Vec<UpdateOverride>>,
 }
 
 #[tokio::main]
@@ -78,11 +89,14 @@ async fn main() -> anyhow::Result<()> {
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
 
-        let dependabot_overrides: HashMap<String, Vec<UpdateOverride>> =
+        let dependabot_overrides: DependabotOverrides =
             toml::from_str(&contents).context("failed to read overrides TOML from file")?;
         dependabot_overrides
     } else {
-        HashMap::new()
+        DependabotOverrides {
+            registries: Default::default(),
+            updates: Default::default(),
+        }
     };
 
     let repos = get_all_repos(&octocrab, &args.org)
@@ -185,10 +199,26 @@ async fn main() -> anyhow::Result<()> {
 
         if existing_dependabot.is_none() && !args.force_new {
             println!(
-                "No existing dependabot config for repo {}, not creating one without --force-new",
+                "No existing dependabot config for repo {}, not creating a PR without --force-new",
                 repo.name
             );
             continue;
+        }
+
+        if args.only_existing {
+            let prs = octocrab
+                .pulls("KittyCAD", &repo.name)
+                .list()
+                .state(State::Open)
+                .base("main")
+                .head("KittyCAD:ciso/update-dependabot")
+                .send()
+                .await?
+                .items;
+            if prs.is_empty() {
+                log::info!("Skipping repo {} as it has no open PR", repo.name);
+                continue;
+            }
         }
 
         // Find updates
@@ -206,7 +236,7 @@ async fn main() -> anyhow::Result<()> {
             };
             vec![apply_override(
                 gha_update,
-                &dependabot_overrides,
+                &dependabot_overrides.updates,
                 repo,
                 &Ecosystem::GitHubActions,
             )]
@@ -253,7 +283,7 @@ async fn main() -> anyhow::Result<()> {
                 };
 
                 // Apply overrides
-                let update = apply_override(update, &dependabot_overrides, repo, ecosystem);
+                let update = apply_override(update, &dependabot_overrides.updates, repo, ecosystem);
 
                 updates.push(update);
 
@@ -261,13 +291,19 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
-        // Apply updates if necessary
+        // We don't generate registries right now so we can just take the overrides if they exist.
+        let registries = if dependabot_overrides.registries.is_empty() {
+            None
+        } else {
+            Some(dependabot_overrides.registries.clone())
+        };
 
+        // Apply updates if necessary
         if !updates.is_empty() {
             let config = DependabotConfig {
                 version: 2,
                 updates,
-                ..DependabotConfig::default()
+                registries,
             };
 
             if args.verbose {
@@ -521,7 +557,8 @@ enum Ecosystem {
     Go,
     Submodule,
     Terraform,
-    Python,
+    Pip,
+    Uv,
     Bundler,
     Docker,
     GitHubActions,
@@ -535,7 +572,8 @@ impl Display for Ecosystem {
             Ecosystem::Go => write!(f, "gomod")?,
             Ecosystem::Submodule => write!(f, "gitsubmodule")?,
             Ecosystem::Terraform => write!(f, "terraform")?,
-            Ecosystem::Python => write!(f, "pip")?,
+            Ecosystem::Pip => write!(f, "pip")?,
+            Ecosystem::Uv => write!(f, "uv")?,
             Ecosystem::Bundler => write!(f, "bundler")?,
             Ecosystem::Docker => write!(f, "docker")?,
             Ecosystem::GitHubActions => write!(f, "github-actions")?,
@@ -567,6 +605,21 @@ async fn find_ecosystems(
     sleep(Duration::from_secs(65)).await;
 
     let terraform_roots = search_ecosystems(octocrab, ".terraform.lock.hcl", None).await?;
+    let uv_roots_1 = search_ecosystems(octocrab, "uv.lock", None).await?;
+    let uv_roots_2 = search_ecosystems(octocrab, "pyproject.toml", Some("tool.uv")).await?;
+    let uv_roots = uv_roots_1
+        .into_iter()
+        .chain(uv_roots_2.into_iter())
+        .collect::<Vec<_>>();
+
+    let pyprojects_roots: Vec<_> = pyprojects_roots
+        .into_iter()
+        .filter(|root| {
+            !uv_roots
+                .iter()
+                .any(|code| code.repository == root.repository)
+        })
+        .collect();
 
     let ecosystems: HashMap<String, Vec<(String, Ecosystem)>> = [
         (cargo_roots, Ecosystem::Cargo),
@@ -574,8 +627,9 @@ async fn find_ecosystems(
         (go_roots, Ecosystem::Go),
         (submodule_roots, Ecosystem::Submodule),
         (terraform_roots, Ecosystem::Terraform),
-        (python_roots, Ecosystem::Python),
-        (pyprojects_roots, Ecosystem::Python),
+        (pyprojects_roots, Ecosystem::Pip),
+        (python_roots, Ecosystem::Pip),
+        (uv_roots, Ecosystem::Uv),
         (bundler_roots, Ecosystem::Bundler),
         (docker_roots, Ecosystem::Docker),
     ]

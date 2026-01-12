@@ -7,11 +7,11 @@ use std::collections::HashMap;
 pub struct DependabotConfig {
     /// The configuration version (always 2)
     pub version: u32,
-    /// A list of update configuration blocks for each package ecosystem.
-    pub updates: Vec<Update>,
     /// Optional top-level private registries.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub registries: Option<HashMap<String, Registry>>,
+    /// A list of update configuration blocks for each package ecosystem.
+    pub updates: Vec<Update>,
 }
 
 /// Same as Update just wiht optional Schedule
