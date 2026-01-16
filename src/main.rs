@@ -52,9 +52,11 @@ struct Args {
     only_existing: bool,
 }
 
+type Registries = HashMap<String, Registry>;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct DependabotOverrides {
-    registries: HashMap<String, Registry>,
+    registries: HashMap<String, Registries>,
     updates: HashMap<String, Vec<UpdateOverride>>,
 }
 
@@ -70,20 +72,6 @@ async fn main() -> anyhow::Result<()> {
         .build()
         .expect("Failed to create GitHub client");
 
-    let ecosystems = if let Some(ecosystem_cache) = &args.ecosystems_cache {
-        if fs::exists(ecosystem_cache)? {
-            let file = File::open(ecosystem_cache).context("failed to open file")?;
-            serde_json::from_reader(&file).context("failed to read JSON file")?
-        } else {
-            let ecosystems = find_ecosystems(&octocrab).await?;
-            let file = File::create(ecosystem_cache).context("failed to create file")?;
-            serde_json::to_writer(&file, &ecosystems).context("failed to write JSON to file")?;
-            ecosystems
-        }
-    } else {
-        find_ecosystems(&octocrab).await?
-    };
-
     let dependabot_overrides = if let Some(dependabot_overrides_file) = &args.dependabot_overrides {
         let mut file = File::open(dependabot_overrides_file).context("failed to open file")?;
         let mut contents = String::new();
@@ -97,6 +85,20 @@ async fn main() -> anyhow::Result<()> {
             registries: Default::default(),
             updates: Default::default(),
         }
+    };
+
+    let ecosystems = if let Some(ecosystem_cache) = &args.ecosystems_cache {
+        if fs::exists(ecosystem_cache)? {
+            let file = File::open(ecosystem_cache).context("failed to open file")?;
+            serde_json::from_reader(&file).context("failed to read JSON file")?
+        } else {
+            let ecosystems = find_ecosystems(&octocrab).await?;
+            let file = File::create(ecosystem_cache).context("failed to create file")?;
+            serde_json::to_writer(&file, &ecosystems).context("failed to write JSON to file")?;
+            ecosystems
+        }
+    } else {
+        find_ecosystems(&octocrab).await?
     };
 
     let repos = get_all_repos(&octocrab, &args.org)
@@ -127,15 +129,6 @@ async fn main() -> anyhow::Result<()> {
             },
         ),
         (
-            "security-major".to_string(),
-            Group {
-                applies_to: Some("security-updates".to_string()),
-                update_types: Some(vec!["major".to_string()]),
-                exclude_patterns: Some(vec!["kittycad*".to_string()]),
-                ..Group::default()
-            },
-        ),
-        (
             "patch".to_string(),
             Group {
                 applies_to: Some("version-updates".to_string()),
@@ -144,15 +137,7 @@ async fn main() -> anyhow::Result<()> {
                 ..Group::default()
             },
         ),
-        (
-            "major".to_string(),
-            Group {
-                applies_to: Some("version-updates".to_string()),
-                update_types: Some(vec!["major".to_string()]),
-                exclude_patterns: Some(vec!["kittycad*".to_string()]),
-                ..Group::default()
-            },
-        ),
+        // No major groups, to avoid grouping of them.
         (
             "minor".to_string(),
             Group {
@@ -291,11 +276,14 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
-        // We don't generate registries right now so we can just take the overrides if they exist.
-        let registries = if dependabot_overrides.registries.is_empty() {
-            None
+        // We don't generate registries right now so we can just take the overrides if they exist for the repo.
+        let repo_registries = dependabot_overrides.registries.get(&repo.name);
+        let registries = if let Some(repo_registries) = repo_registries
+            && !dependabot_overrides.registries.is_empty()
+        {
+            Some(repo_registries.clone())
         } else {
-            Some(dependabot_overrides.registries.clone())
+            None
         };
 
         // Apply updates if necessary
