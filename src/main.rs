@@ -243,9 +243,10 @@ async fn main() -> anyhow::Result<()> {
                         && update.package_ecosystem == ecosystem.to_string()
                 }) {
                     log::warn!(
-                        "Tried to generate an update config that would conflict with existing one for repo {} and ecosystem {}. Skipping...",
+                        "Tried to generate an update config that would conflict with existing one for repo {} and ecosystem {} in {}. Skipping...",
                         repo.name,
-                        ecosystem
+                        ecosystem,
+                        path
                     );
                     // TODO: If we configure target-branch, then we have to take this into consideration here aswell
                     continue;
