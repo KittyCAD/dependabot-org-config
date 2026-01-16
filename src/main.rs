@@ -573,7 +573,7 @@ impl Display for Ecosystem {
 
 async fn find_ecosystems(
     octocrab: &Octocrab,
-) -> anyhow::Result<HashMap<String, Vec<(String, Ecosystem)>>> {
+) -> anyhow::Result<IndexMap<String, Vec<(String, Ecosystem)>>> {
     // TODO Homebrew?
     // TODO: Handle workspaces (Cargo.toml but maybe also others)
     let cargo_roots = search_ecosystems(octocrab, "Cargo.toml", Some("[workspace]")).await?;
@@ -609,7 +609,7 @@ async fn find_ecosystems(
         })
         .collect();
 
-    let ecosystems: HashMap<String, Vec<(String, Ecosystem)>> = [
+    let ecosystems: IndexMap<String, Vec<(String, Ecosystem)>> = [
         (cargo_roots, Ecosystem::Cargo),
         (npm_roots, Ecosystem::Npm),
         (go_roots, Ecosystem::Go),
@@ -623,17 +623,22 @@ async fn find_ecosystems(
     ]
     .iter()
     .flat_map(|(roots, ecosystem)| {
-        roots.iter().map(move |code| {
-            (
-                code.repository
-                    .full_name
-                    .clone()
-                    .expect("full_name must be available"),
-                (code.url.path().to_string(), *ecosystem),
-            )
-        })
+        let mut roots = roots
+            .iter()
+            .map(move |code| {
+                (
+                    code.repository
+                        .full_name
+                        .clone()
+                        .expect("full_name must be available"),
+                    (code.url.path().to_string(), *ecosystem),
+                )
+            })
+            .collect::<Vec<_>>();
+        roots.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.0.cmp(&b.1.0)));
+        roots
     })
-    .fold(HashMap::new(), |mut acc, (repo, entry)| {
+    .fold(IndexMap::new(), |mut acc, (repo, entry)| {
         acc.entry(repo).or_default().push(entry);
         acc
     });
