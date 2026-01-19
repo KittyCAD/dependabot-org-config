@@ -14,7 +14,6 @@ use octocrab::models::{Code, Repository};
 use octocrab::params::State;
 use octocrab::params::repos::Reference;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io::Read;
@@ -52,12 +51,12 @@ struct Args {
     only_existing: bool,
 }
 
-type Registries = HashMap<String, Registry>;
+type Registries = IndexMap<String, Registry>;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct DependabotOverrides {
-    registries: HashMap<String, Registries>,
-    updates: HashMap<String, Vec<UpdateOverride>>,
+    registries: IndexMap<String, Registries>,
+    updates: IndexMap<String, Vec<UpdateOverride>>,
 }
 
 #[tokio::main]
@@ -312,7 +311,7 @@ async fn main() -> anyhow::Result<()> {
 
 fn apply_override(
     update: Update,
-    dependabot_overrides: &HashMap<String, Vec<UpdateOverride>>,
+    dependabot_overrides: &IndexMap<String, Vec<UpdateOverride>>,
     repo: &Repository,
     ecosystem: &Ecosystem,
 ) -> Update {

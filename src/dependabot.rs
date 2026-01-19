@@ -1,6 +1,5 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -9,7 +8,7 @@ pub struct DependabotConfig {
     pub version: u32,
     /// Optional top-level private registries.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub registries: Option<HashMap<String, Registry>>,
+    pub registries: Option<IndexMap<String, Registry>>,
     /// A list of update configuration blocks for each package ecosystem.
     pub updates: Vec<Update>,
 }
@@ -79,6 +78,11 @@ pub struct UpdateOverride {
     /// Optional cooldown configuration for dependency updates.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cooldown: Option<Cooldown>,
+
+    // Tool specific attributes:
+    /// Whether to disable grouping of updates.
+    #[serde(skip_serializing)]
+    pub groups_override: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -182,10 +186,10 @@ impl Update {
                 .rebase_strategy
                 .clone()
                 .or(self.rebase_strategy.clone()),
-            groups: if let Some(other_groups) = &other.groups {
-                if other_groups.is_empty() {
-                    None
-                } else {
+            groups: if other.groups_override.unwrap_or(false) {
+                other.groups.clone()
+            } else {
+                if let Some(other_groups) = &other.groups {
                     if let Some(groups) = &self.groups {
                         let mut merged_groups = other_groups.clone();
 
@@ -197,9 +201,9 @@ impl Update {
                     } else {
                         other.groups.clone()
                     }
+                } else {
+                    self.groups
                 }
-            } else {
-                self.groups
             },
             cooldown: other.cooldown.clone().or(self.cooldown.clone()),
         }
