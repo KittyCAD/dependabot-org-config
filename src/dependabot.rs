@@ -182,7 +182,25 @@ impl Update {
                 .rebase_strategy
                 .clone()
                 .or(self.rebase_strategy.clone()),
-            groups: other.groups.clone().or(self.groups.clone()),
+            groups: if let Some(other_groups) = &other.groups {
+                if other_groups.is_empty() {
+                    None
+                } else {
+                    if let Some(groups) = &self.groups {
+                        let mut merged_groups = other_groups.clone();
+
+                        for (key, group) in groups {
+                            merged_groups.insert(key.clone(), group.clone());
+                        }
+
+                        Some(merged_groups)
+                    } else {
+                        other.groups.clone()
+                    }
+                }
+            } else {
+                self.groups
+            },
             cooldown: other.cooldown.clone().or(self.cooldown.clone()),
         }
     }
