@@ -350,6 +350,7 @@ async fn create_pr(
         .await
         .context("failed to fetch ref to main branch")?;
 
+    // FIXME: With closed PRs it wont reopen and update the branch, so we need to check for existing PRs and update those branches instead.
     let existing_config = if octocrab_repo
         .get_ref(&Reference::Branch("ciso/update-dependabot".to_string()))
         .await
@@ -385,7 +386,7 @@ async fn create_pr(
         if let Some(decoded_content) = existing_content.decoded_content()
             && decoded_content == content
         {
-            log::info!("No changes for {}", repo.name);
+            log::info!("No changes on ciso/update-dependabot for {}", repo.name);
             return Ok(());
         }
 
