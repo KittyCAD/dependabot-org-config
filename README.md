@@ -19,7 +19,7 @@ cargo run -- <ORG_NAME> [--ecosystems-cache <PATH>] [--dependabot-overrides <PAT
 - `--ecosystems-cache`: Optional path to cache ecosystems. This speeds up repeated runs by storing information about package ecosystems, reducing API calls to GitHub. **Note:** The cache can be slow to create on the first run, especially for large organizations.
 - `--dependabot-overrides`: Optional path to a TOML file with custom Dependabot update rules. This allows you to override or supplement the default configuration for specific repositories or ecosystems.
 - `--create-pr`: Create PRs for config changes (pull requests will be generated under your account, as determined by your `GH_TOKEN`)
-- `--force-new`: Force creation of new config
+- `--force-new`: Create new dependabot config files if none was found
 - `--repo`: Limit to specific repositories (repeatable)
 - `--verbose`: Print verbose output
 - `--only-existing`: Only process repositories that already have an open PR for Dependabot config
