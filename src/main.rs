@@ -577,7 +577,7 @@ async fn find_ecosystems(
 ) -> anyhow::Result<IndexMap<String, Vec<(String, Ecosystem)>>> {
     // TODO Homebrew?
     // TODO: Handle workspaces (Cargo.toml but maybe also others)
-    let cargo_roots = search_ecosystems(octocrab, "Cargo.toml", Some("[workspace]")).await?;
+    let cargo_roots = search_ecosystems(octocrab, "Cargo.toml", Some("[workspace")).await?;
     let npm_roots = search_ecosystems(octocrab, "package.json", None).await?;
     let go_roots = search_ecosystems(octocrab, "go.mod", None).await?;
     let submodule_roots = search_ecosystems(octocrab, ".gitmodules", None).await?;
