@@ -596,10 +596,7 @@ async fn find_ecosystems(
     let terraform_roots = search_ecosystems(octocrab, ".terraform.lock.hcl", None).await?;
     let uv_roots_1 = search_ecosystems(octocrab, "uv.lock", None).await?;
     let uv_roots_2 = search_ecosystems(octocrab, "pyproject.toml", Some("tool.uv")).await?;
-    let uv_roots = uv_roots_1
-        .into_iter()
-        .chain(uv_roots_2.into_iter())
-        .collect::<Vec<_>>();
+    let uv_roots = uv_roots_1.into_iter().chain(uv_roots_2).collect::<Vec<_>>();
 
     let pyprojects_roots: Vec<_> = pyprojects_roots
         .into_iter()
