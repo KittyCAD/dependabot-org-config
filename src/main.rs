@@ -151,6 +151,7 @@ async fn main() -> anyhow::Result<()> {
     let default_cooldown = Cooldown {
         default_days: Some(7),
         exclude: Some(vec![
+            "ezpz".to_string(),
             "*kcl*".to_string(),
             "*zoo*".to_string(),
             "*kittycad*".to_string(),
