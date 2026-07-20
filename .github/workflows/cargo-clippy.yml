@@ -1,0 +1,26 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+name: cargo clippy
+permissions:
+  contents: read
+jobs:
+  cargo-clippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1.17.0
+        with:
+          components: clippy
+          rustflags: "" # Use .cargo/config.toml
+
+      - name: Run clippy
+        run: |
+          cargo clippy --all-targets -- -D warnings
+      - name: Check Cargo.lock doesn't need updating
+        run: |
+          cargo check --locked || echo "Please run cargo check and commit the changed Cargo.lock"
