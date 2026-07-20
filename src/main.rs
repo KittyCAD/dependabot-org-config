@@ -123,7 +123,11 @@ async fn main() -> anyhow::Result<()> {
             Group {
                 applies_to: Some("security-updates".to_string()),
                 update_types: Some(vec!["minor".to_string(), "patch".to_string()]),
-                exclude_patterns: Some(vec!["kittycad*".to_string()]),
+                exclude_patterns: Some(vec![
+                    "ezpz".to_string(),
+                    "kcl*".to_string(),
+                    "kittycad*".to_string(),
+                ]),
                 ..Group::default()
             },
         ),
@@ -132,7 +136,11 @@ async fn main() -> anyhow::Result<()> {
             Group {
                 applies_to: Some("version-updates".to_string()),
                 update_types: Some(vec!["patch".to_string()]),
-                exclude_patterns: Some(vec!["kittycad*".to_string()]),
+                exclude_patterns: Some(vec![
+                    "ezpz".to_string(),
+                    "kcl*".to_string(),
+                    "kittycad*".to_string(),
+                ]),
                 ..Group::default()
             },
         ),
@@ -142,7 +150,21 @@ async fn main() -> anyhow::Result<()> {
             Group {
                 applies_to: Some("version-updates".to_string()),
                 update_types: Some(vec!["minor".to_string(), "patch".to_string()]),
-                exclude_patterns: Some(vec!["kittycad*".to_string()]),
+                exclude_patterns: Some(vec![
+                    "ezpz".to_string(),
+                    "kcl*".to_string(),
+                    "kittycad*".to_string(),
+                ]),
+                ..Group::default()
+            },
+        ),
+        // Group kcl updates together. There are frequently API-breaking changes
+        // that require manual updates.
+        (
+            "kcl".to_string(),
+            Group {
+                applies_to: Some("version-updates".to_string()),
+                patterns: Some(vec!["ezpz".to_string(), "kcl*".to_string()]),
                 ..Group::default()
             },
         ),
