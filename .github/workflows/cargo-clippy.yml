@@ -23,4 +23,4 @@ jobs:
           cargo clippy --all-targets -- -D warnings
       - name: Check Cargo.lock doesn't need updating
         run: |
-          cargo check --locked || echo "Please run cargo check and commit the changed Cargo.lock"
+          cargo check --locked || (echo "Please run cargo check and commit the changed Cargo.lock" ; false)
