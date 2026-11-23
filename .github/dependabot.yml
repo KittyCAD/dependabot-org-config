@@ -1,0 +1,50 @@
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+    day: saturday
+    timezone: America/Los_Angeles
+  open-pull-requests-limit: 5
+  groups:
+    security:
+      applies-to: security-updates
+      update-types:
+      - minor
+      - patch
+    patch:
+      applies-to: version-updates
+      update-types:
+      - patch
+    minor:
+      applies-to: version-updates
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7
+- package-ecosystem: cargo
+  directory: /
+  schedule:
+    interval: weekly
+    day: saturday
+    timezone: America/Los_Angeles
+  open-pull-requests-limit: 5
+  groups:
+    security:
+      applies-to: security-updates
+      update-types:
+      - minor
+      - patch
+    patch:
+      applies-to: version-updates
+      update-types:
+      - patch
+    minor:
+      applies-to: version-updates
+      update-types:
+      - minor
+      - patch
+  cooldown:
+    default-days: 7
