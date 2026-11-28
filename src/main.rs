@@ -168,6 +168,20 @@ async fn main() -> anyhow::Result<()> {
                 ..Group::default()
             },
         ),
+        // Group wasm-bindgen updates together. These generally need to be
+        // updated together.
+        (
+            "wasm-bindgen".to_string(),
+            Group {
+                applies_to: Some("version-updates".to_string()),
+                patterns: Some(vec![
+                    "js-sys".to_string(),
+                    "wasm-bindgen*".to_string(),
+                    "web-sys".to_string(),
+                ]),
+                ..Group::default()
+            },
+        ),
     ]);
 
     let default_cooldown = Cooldown {
